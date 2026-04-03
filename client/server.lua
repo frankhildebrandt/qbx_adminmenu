@@ -21,17 +21,10 @@ local options = {
     end,
 }
 
-lib.registerMenu({
-    id = 'qbx_adminmenu_server_menu',
-    title = locale('title.server_menu'),
-    position = 'top-right',
-    onClose = function(keyPressed)
-        CloseMenu(false, keyPressed, 'qbx_adminmenu_main_menu')
-    end,
-    onSelected = function(selected)
-        MenuIndexes.qbx_adminmenu_server_menu = selected
-    end,
-    options = {
+local CORE_SERVER_OPTIONS = 4
+
+function RefreshServerMenu()
+    local baseOptions = {
         {label = locale('server_options.label1'), description = locale('server_options.desc1'), icon = 'fas fa-cloud', values = {locale('server_options.value1_1'), locale('server_options.value1_2'), locale('server_options.value1_3'), locale('server_options.value1_4'), locale('server_options.value1_5'), locale('server_options.value1_6'),
         locale('server_options.value1_7'), locale('server_options.value1_8'), locale('server_options.value1_9'), locale('server_options.value1_10'), locale('server_options.value1_11'), locale('server_options.value1_12'), locale('server_options.value1_13'), locale('server_options.value1_14'), locale('server_options.value1_15')},
         args = {'Extrasunny', 'Clear', 'Neutral', 'Smog', 'Foggy', 'Overcast', 'Clouds', 'Clearing', 'Rain', 'Thunder', 'Snow', 'Blizzard', 'Snowlight', 'Xmas', 'Halloween'}, close = false},
@@ -40,10 +33,30 @@ lib.registerMenu({
         {label = locale('server_options.label3'), description = locale('server_options.desc3'), icon = 'fas fa-walkie-talkie'},
         {label = locale('server_options.label4'), description = locale('server_options.desc4'), icon = 'fas fa-box-open'},
     }
-}, function(selected, scrollIndex, args)
-    if selected == 1 or selected == 2 then
-        options[selected](args[scrollIndex])
-    else
-        options[selected]()
-    end
-end)
+    lib.registerMenu({
+        id = 'qbx_adminmenu_server_menu',
+        title = locale('title.server_menu'),
+        position = 'top-right',
+        onClose = function(keyPressed)
+            CloseMenu(false, keyPressed, 'qbx_adminmenu_main_menu')
+        end,
+        onSelected = function(selected)
+            MenuIndexes.qbx_adminmenu_server_menu = selected
+        end,
+        options = QbxAdminMenu_MergeServerOptions(baseOptions)
+    }, function(selected, scrollIndex, args)
+        if QbxAdminMenu_HandleServerSelect(args) then
+            return
+        end
+        if selected > CORE_SERVER_OPTIONS then
+            return
+        end
+        if selected == 1 or selected == 2 then
+            options[selected](args[scrollIndex])
+        else
+            options[selected]()
+        end
+    end)
+end
+
+RefreshServerMenu()
