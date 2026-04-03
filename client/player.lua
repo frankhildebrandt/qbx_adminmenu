@@ -155,6 +155,31 @@ function GeneratePlayersMenu()
             lib.showMenu('qbx_adminmenu_main_menu', MenuIndexes.qbx_adminmenu_main_menu)
             return
         end
+        local playerMenuOptions = {
+            {label = locale('player_options.label1'), description = locale('player_options.desc1'), icon = 'fas fa-wrench'},
+            {label = locale('player_options.label2'), description = locale('player_options.desc2'), icon = 'fas fa-file-invoice'},
+            {label = locale('player_options.label3'), description = locale('player_options.desc3'), icon = 'fas fa-gamepad'},
+            {label = string.format('Name: %s', player.name)},
+            {label = string.format('Food: %s', player.food)},
+            {label = string.format('Water: %s', player.water)},
+            {label = string.format('Stress: %s', player.stress)},
+            {label = string.format('Armor: %s', player.armor)},
+            {label = string.format('Phone: %s', player.phone)},
+            {label = string.format('Crafting Rep: %s', player.craftingrep)},
+            {label = string.format('Dealer Rep: %s', player.dealerrep)},
+            {label = string.format('Cash: %s', lib.math.groupdigits(player.cash))},
+            {label = string.format('Bank: %s', lib.math.groupdigits(player.bank))},
+            {label = string.format('Job: %s', player.job)},
+            {label = string.format('Gang: %s', player.gang)},
+            {label = string.format('Radio: %s', Player(args[1].id).state.radioChannel)},
+            {label = string.format('%s', player.license), description = 'License'},
+            {label = string.format('%s', player.discord), description = 'Discord'},
+            {label = string.format('%s', player.steam), description = 'Steam'}
+        }
+        for _, opt in ipairs(QbxAdminMenu_GetPlayerExtensionOptions()) do
+            playerMenuOptions[#playerMenuOptions + 1] = opt
+        end
+        selectedPlayer = player
         lib.registerMenu({
             id = ('qbx_adminmenu_player_menu_%s'):format(args[1].id),
             title = player.name,
@@ -165,31 +190,17 @@ function GeneratePlayersMenu()
             onSelected = function(selected)
                 MenuIndexes[('qbx_adminmenu_player_menu_%s'):format(args[1].id)] = selected
             end,
-            options = {
-                {label = locale('player_options.label1'), description = locale('player_options.desc1'), icon = 'fas fa-wrench'},
-                {label = locale('player_options.label2'), description = locale('player_options.desc2'), icon = 'fas fa-file-invoice'},
-                {label = locale('player_options.label3'), description = locale('player_options.desc3'), icon = 'fas fa-gamepad'},
-                {label = string.format('Name: %s', player.name)},
-                {label = string.format('Food: %s', player.food)},
-                {label = string.format('Water: %s', player.water)},
-                {label = string.format('Stress: %s', player.stress)},
-                {label = string.format('Armor: %s', player.armor)},
-                {label = string.format('Phone: %s', player.phone)},
-                {label = string.format('Crafting Rep: %s', player.craftingrep)},
-                {label = string.format('Dealer Rep: %s', player.dealerrep)},
-                {label = string.format('Cash: %s', lib.math.groupdigits(player.cash))},
-                {label = string.format('Bank: %s', lib.math.groupdigits(player.bank))},
-                {label = string.format('Job: %s', player.job)},
-                {label = string.format('Gang: %s', player.gang)},
-                {label = string.format('Radio: %s', Player(args[1].id).state.radioChannel)},
-                {label = string.format('%s', player.license), description = 'License'},
-                {label = string.format('%s', player.discord), description = 'Discord'},
-                {label = string.format('%s', player.steam), description = 'Steam'}
-            }
-        }, function(selected)
+            options = playerMenuOptions
+        }, function(selected, _, args)
+            if QbxAdminMenu_HandlePlayerSelect(args, { targetServerId = selectedPlayer.id, player = selectedPlayer }) then
+                return
+            end
+            local coreCount = QbxAdminMenu_GetCorePlayerOptionCount()
+            if selected > coreCount then
+                return
+            end
             playerOptions[selected]()
         end)
-        selectedPlayer = player
         lib.showMenu(('qbx_adminmenu_player_menu_%s'):format(args[1].id), MenuIndexes[('qbx_adminmenu_player_menu_%s'):format(args[1].id)])
     end)
     lib.showMenu('qbx_adminmenu_players_menu', MenuIndexes.qbx_adminmenu_players_menu)

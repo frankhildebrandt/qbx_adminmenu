@@ -81,17 +81,10 @@ function GenerateVehiclesSpawnMenu()
     lib.showMenu('qbx_adminmenu_spawn_vehicles_menu', MenuIndexes.qbx_adminmenu_spawn_vehicles_menu)
 end
 
-lib.registerMenu({
-    id = 'qbx_adminmenu_vehicles_menu',
-    title = 'Vehicles',
-    position = 'top-right',
-    onClose = function(keyPressed)
-        CloseMenu(false, keyPressed, 'qbx_adminmenu_main_menu')
-    end,
-    onSelected = function(selected)
-        MenuIndexes.qbx_adminmenu_vehicles_menu = selected
-    end,
-    options = {
+local CORE_VEHICLE_OPTIONS = 6
+
+function RefreshVehicleMenu()
+    local baseOptions = {
         {label = 'Spawn Vehicle'},
         {label = 'Fix Vehicle', close = false},
         {label = 'Buy Vehicle', close = true},
@@ -99,48 +92,68 @@ lib.registerMenu({
         {label = 'Tune Vehicle'},
         {label = 'Change Plate'}
     }
-}, function(selected)
-    if selected == 1 then
-        GenerateVehiclesSpawnMenu()
-    elseif selected == 2 then
-        ExecuteCommand('fix')
-    elseif selected == 3 then
-        ExecuteCommand('admincar')
-    elseif selected == 4 then
-        ExecuteCommand('dv')
-    elseif selected == 5 then
-        if not cache.vehicle then
-            exports.qbx_core:Notify('You have to be in a vehicle, to use this', 'error')
-            lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+    lib.registerMenu({
+        id = 'qbx_adminmenu_vehicles_menu',
+        title = 'Vehicles',
+        position = 'top-right',
+        onClose = function(keyPressed)
+            CloseMenu(false, keyPressed, 'qbx_adminmenu_main_menu')
+        end,
+        onSelected = function(selected)
+            MenuIndexes.qbx_adminmenu_vehicles_menu = selected
+        end,
+        options = QbxAdminMenu_MergeVehicleOptions(baseOptions)
+    }, function(selected, _, args)
+        if QbxAdminMenu_HandleVehicleSelect(args, { vehicle = cache.vehicle }) then
             return
         end
-        exports.qbx_customs:OpenMenu()
-    elseif selected == 6 then
-        if not cache.vehicle then
-            exports.qbx_core:Notify('You have to be in a vehicle, to use this', 'error')
-            lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+        if selected > CORE_VEHICLE_OPTIONS then
             return
         end
+        if selected == 1 then
+            GenerateVehiclesSpawnMenu()
+        elseif selected == 2 then
+            ExecuteCommand('fix')
+        elseif selected == 3 then
+            ExecuteCommand('admincar')
+        elseif selected == 4 then
+            ExecuteCommand('dv')
+        elseif selected == 5 then
+            if not cache.vehicle then
+                exports.qbx_core:Notify('You have to be in a vehicle, to use this', 'error')
+                lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+                return
+            end
+            exports.qbx_customs:OpenMenu()
+        elseif selected == 6 then
+            if not cache.vehicle then
+                exports.qbx_core:Notify('You have to be in a vehicle, to use this', 'error')
+                lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+                return
+            end
 
-        local dialog = lib.inputDialog('Custom License Plate (Max. 8 characters)',  {'License Plate'})
+            local dialog = lib.inputDialog('Custom License Plate (Max. 8 characters)',  {'License Plate'})
 
-        if not dialog or not dialog[1] or dialog[1] == '' then
-            Wait(200)
-            lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
-            return
+            if not dialog or not dialog[1] or dialog[1] == '' then
+                Wait(200)
+                lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+                return
+            end
+
+            if #dialog[1] > 8 then
+                Wait(200)
+                exports.qbx_core:Notify('You can only enter a maximum of 8 characters', 'error')
+                lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
+                return
+            end
+
+            SetVehicleNumberPlateText(cache.vehicle, dialog[1])
+            TriggerEvent('qb-vehiclekeys:client:AddKeys', dialog[1])
         end
+    end)
+end
 
-        if #dialog[1] > 8 then
-            Wait(200)
-            exports.qbx_core:Notify('You can only enter a maximum of 8 characters', 'error')
-            lib.showMenu('qbx_adminmenu_vehicles_menu', MenuIndexes.qbx_adminmenu_vehicles_menu)
-            return
-        end
-
-        SetVehicleNumberPlateText(cache.vehicle, dialog[1])
-        TriggerEvent('qb-vehiclekeys:client:AddKeys', dialog[1])
-    end
-end)
+RefreshVehicleMenu()
 
 lib.registerMenu({
     id = 'qbx_adminmenu_spawn_vehicles_menu',
