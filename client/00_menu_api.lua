@@ -278,7 +278,28 @@ local function unregisterMain(id)
     removeEntry(registries.main, invokingResource(), id)
 end
 
-local function registerPlayer(id, data)
+local function normalizeRegisterArgs(id, data, maybeData)
+    if type(id) ~= 'string' and type(data) == 'string' and type(maybeData) == 'table' then
+        return data, maybeData
+    end
+    if type(id) == 'table' and data == nil and type(id.id) == 'string' then
+        return id.id, id
+    end
+    return id, data
+end
+
+local function normalizeIdArg(id, maybeId)
+    if type(id) ~= 'string' and type(maybeId) == 'string' then
+        return maybeId
+    end
+    if type(id) == 'table' and type(id.id) == 'string' then
+        return id.id
+    end
+    return id
+end
+
+local function registerPlayer(id, data, maybeData)
+    id, data = normalizeRegisterArgs(id, data, maybeData)
     assert(type(id) == 'string' and id ~= '', 'RegisterPlayerMenuItem: id must be a non-empty string')
     assert(type(data) == 'table', 'RegisterPlayerMenuItem: data must be a table')
     assert(type(data.label) == 'string', 'RegisterPlayerMenuItem: data.label required')
@@ -297,7 +318,8 @@ local function registerPlayer(id, data)
     }
 end
 
-local function unregisterPlayer(id)
+local function unregisterPlayer(id, maybeId)
+    id = normalizeIdArg(id, maybeId)
     removeEntry(registries.player, invokingResource(), id)
 end
 
