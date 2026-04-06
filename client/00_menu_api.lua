@@ -22,6 +22,7 @@
 ---@field icon? string
 ---@field close? boolean
 ---@field onSelect fun(ctx: { targetServerId: number, player: table }):nil
+---@field event? string
 
 ---@class QbxAdminMenuVehicleExt : QbxAdminMenuExtBase
 ---@field label string
@@ -306,7 +307,13 @@ local function registerPlayer(id, data, maybeData)
     assert(type(id) == 'string' and id ~= '', 'RegisterPlayerMenuItem: id must be a non-empty string')
     assert(type(data) == 'table', 'RegisterPlayerMenuItem: data must be a table')
     assert(type(data.label) == 'string', 'RegisterPlayerMenuItem: data.label required')
-    assert(type(data.onSelect) == 'function', 'RegisterPlayerMenuItem: data.onSelect required')
+    local onSelect = data.onSelect
+    if type(onSelect) ~= 'function' and type(data.event) == 'string' and data.event ~= '' then
+        onSelect = function(ctx)
+            TriggerEvent(data.event, ctx)
+        end
+    end
+    assert(type(onSelect) == 'function', 'RegisterPlayerMenuItem: data.onSelect or data.event required')
     local res = invokingResource()
     removeEntry(registries.player, res, id)
     registries.player[#registries.player + 1] = {
@@ -317,7 +324,7 @@ local function registerPlayer(id, data, maybeData)
         description = data.description,
         icon = data.icon,
         close = data.close,
-        onSelect = data.onSelect,
+        onSelect = onSelect,
     }
 end
 
