@@ -282,6 +282,9 @@ local function normalizeRegisterArgs(id, data, maybeData)
     if type(id) ~= 'string' and type(data) == 'string' and type(maybeData) == 'table' then
         return data, maybeData
     end
+    if type(id) == 'string' and type(data) == 'table' and type(data.onSelect) ~= 'function' and type(maybeData) == 'table' then
+        return id, maybeData
+    end
     if type(id) == 'table' and data == nil and type(id.id) == 'string' then
         return id.id, id
     end
